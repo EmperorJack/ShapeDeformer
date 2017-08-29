@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <string>
+#include <vector>
 #include <mesh.hpp>
 
 using std::string;
@@ -52,12 +52,48 @@ Mesh* readOFF(string filename) {
     return mesh;
 }
 
-void readDef(string filename) {
+Eigen::Matrix4f readDef(string filename) {
+    Eigen::Matrix4f deformation;
 
+    std::ifstream fileStream(filename);
+    string line;
+
+    // Skip the first line
+    std::getline(fileStream, line);
+
+    // For each row
+    for (int i = 0; i < 4; i++) {
+        std::getline(fileStream, line);
+        std::istringstream lineTokens(line);
+
+        // For each column
+        for (int j = 0; j < 4; j++) {
+            float value;
+            lineTokens >> value;
+            deformation(i, j) = value;
+        }
+    }
+
+    return deformation;
 }
 
-void readSel(string filename) {
+std::vector<int> readSel(string filename, int vertexCount) {
+    std::vector<int> selection;
 
+    std::ifstream fileStream(filename);
+    string line;
+
+    // Skip the first two lines
+    std::getline(fileStream, line);
+    std::getline(fileStream, line);
+
+    // For each vertex
+    for (int i = 0; i < vertexCount; i++) {
+        std::getline(fileStream, line);
+        selection.push_back(std::stoi(line));
+    }
+
+    return selection;
 }
 
 void writeOFF(string filename, Mesh* mesh) {

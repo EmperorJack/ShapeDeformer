@@ -4,19 +4,22 @@
 
 #include <iostream>
 #include <mesh.hpp>
+#include <Eigen>
 
 using std::string;
 
 // Parser declarations
 Mesh* readOFF(string filename);
-void readDef(string filename);
-void readSel(string filename);
+Eigen::Matrix4f readDef(string filename);
+std::vector<int> readSel(string filename, int vertexCount);
 void writeOFF(string filename, Mesh* mesh);
 
 // Deformation declaration
-void performDeformation();
+void performDeformation(Mesh* mesh, Eigen::Matrix4f handleDeformation, std::vector<int> handleSelection);
 
 int main(int argc, char *argv[]) {
+    fprintf(stdout, "ARAP Shape Deformer\n");
+
     if (argc != 4) {
         fprintf(stderr, "Filenames for an input model, handle deformation matrix and handle selection indices should be provided!\n");
         //fprintf(stderr, "e.g: ./ShapeDeformer \"../res/\"\n");
@@ -29,11 +32,11 @@ int main(int argc, char *argv[]) {
     string handleSelectionFilename = string(argv[3]);
 
     Mesh* mesh = readOFF(inputFilename);
-    readDef(handleDeformationFilename);
-    readSel(handleSelectionFilename);
+    Eigen::Matrix4f handleDeformation = readDef(handleDeformationFilename);
+    std::vector<int> handleSelection = readSel(handleSelectionFilename, mesh->vertices.size());
 
     // Perform the deformation
-    performDeformation();
+    performDeformation(mesh, handleDeformation, handleSelection);
 
     // Write output file
     string outputFilename = "deformed_" + inputFilename;
