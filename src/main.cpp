@@ -20,26 +20,27 @@ void performDeformation(Mesh* mesh, Eigen::Matrix4f handleDeformation, std::vect
 int main(int argc, char *argv[]) {
     fprintf(stdout, "ARAP Shape Deformer\n");
 
-    if (argc != 4) {
-        fprintf(stderr, "Filenames for an input model, handle deformation matrix and handle selection indices should be provided!\n");
+    if (argc != 5) {
+        fprintf(stderr, "Filenames for an input model, handle deformation matrix, handle selection indices and output model should be provided!\n");
         //fprintf(stderr, "e.g: ./ShapeDeformer \"../res/\"\n");
         return -1;
     }
 
-    // Parse input files
+    // Parse input arguments
     string inputFilename = string(argv[1]);
     string handleDeformationFilename = string(argv[2]);
     string handleSelectionFilename = string(argv[3]);
+    string outputFilename = string(argv[4]);
 
+    // Parse input files
     Mesh* mesh = readOFF(inputFilename);
     Eigen::Matrix4f handleDeformation = readDef(handleDeformationFilename);
-    std::vector<int> handleSelection = readSel(handleSelectionFilename, mesh->vertices.size());
+    std::vector<int> handleSelection = readSel(handleSelectionFilename, (int) mesh->vertices.size());
 
     // Perform the deformation
     performDeformation(mesh, handleDeformation, handleSelection);
 
     // Write output file
-    string outputFilename = "deformed_" + inputFilename;
     writeOFF(outputFilename, mesh);
 
     delete mesh;

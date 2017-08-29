@@ -32,7 +32,7 @@ Mesh* readOFF(string filename) {
 
         std::getline(fileStream, line);
         std::istringstream vertexTokens(line);
-        vertexTokens >> vertex.x() >> vertex.y() >> vertex.z();
+        vertexTokens >> vertex[0] >> vertex[1] >> vertex[2];
 
         mesh->vertices.push_back(vertex);
     }
@@ -97,5 +97,27 @@ std::vector<int> readSel(string filename, int vertexCount) {
 }
 
 void writeOFF(string filename, Mesh* mesh) {
+    std::cout << filename << std::endl;
+    std::ofstream fileStream(filename);
 
+    // Write the first line
+    fileStream << "OFF" << "\n";
+
+    // Write the vertex, face and edge counts
+    fileStream << mesh->vertices.size() << " " << mesh->faces.size() << " " << 0 << "\n";
+
+    // Write each vertex
+    for (int i = 0; i < mesh->vertices.size(); i++) {
+        Eigen::Vector3f vertex = mesh->vertices[i];
+        fileStream << vertex[0] << " " << vertex[1] << " " << vertex[2] << "\n";
+    }
+
+    // Write each triangle
+    for (int i = 0; i < mesh->faces.size(); i++) {
+        triangle face = mesh->faces[i];
+        int numVertices = 3; // Should always be 3
+        fileStream << numVertices << " " << face.v[0] << " " << face.v[1] << " " << face.v[2] << "\n";
+    }
+
+    fileStream.close();
 }
