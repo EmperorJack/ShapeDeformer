@@ -1,13 +1,42 @@
-#include <iostream>
-#include <Eigen>
+//
+// Created by Jack Purvis
+//
 
-int main() {
-    Eigen::MatrixXd m(2,2);
-    m(0,0) = 3;
-    m(1,0) = 2.5;
-    m(0,1) = -1;
-    m(1,1) = m(1,0) + m(0,1);
-    std::cout << m << std::endl;
+#include <iostream>
+
+using std::string;
+
+// Parser declarations
+void readOFF(string filename);
+void readDef(string filename);
+void readSel(string filename);
+void writeOFF(string filename);
+
+// Deformation declaration
+void performDeformation();
+
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        fprintf(stderr, "Filenames for an input model, handle deformation matrix and handle selection indices should be provided!\n");
+        //fprintf(stderr, "e.g: ./ShapeDeformer \"../res/\"\n");
+        return -1;
+    }
+
+    // Parse input files
+    string inputFilename = string(argv[1]);
+    string handleDeformationFilename = string(argv[2]);
+    string handleSelectionFilename = string(argv[3]);
+
+    readOFF(inputFilename);
+    readDef(handleDeformationFilename);
+    readSel(handleSelectionFilename);
+
+    // Perform the deformation
+    performDeformation();
+
+    // Write output file
+    string outputFilename = "deformed_" + inputFilename;
+    writeOFF(outputFilename);
 
     return 0;
 }
