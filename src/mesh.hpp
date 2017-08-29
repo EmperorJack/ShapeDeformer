@@ -15,6 +15,12 @@ struct triangle {
 class Mesh {
 
 public:
+    Mesh(int numVertices, int numFaces) :
+            numVertices(numVertices), numFaces(numFaces) {}
+
+    int numVertices;
+    int numFaces;
+
     std::vector<Eigen::Vector3f> vertices;
     std::vector<triangle> faces;
 

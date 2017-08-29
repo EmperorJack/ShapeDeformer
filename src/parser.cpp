@@ -11,8 +11,6 @@
 using std::string;
 
 Mesh* readOFF(string filename) {
-    Mesh* mesh = new Mesh();
-
     std::ifstream fileStream(filename);
     string line;
 
@@ -25,6 +23,8 @@ Mesh* readOFF(string filename) {
     std::getline(fileStream, line);
     std::istringstream lineTokens(line);
     lineTokens >> vertexCount >> faceCount >> edgeCount;
+
+    Mesh* mesh = new Mesh(vertexCount, faceCount);
 
     // Read each vertex
     for (int i = 0; i < vertexCount; i++) {
@@ -52,8 +52,8 @@ Mesh* readOFF(string filename) {
     return mesh;
 }
 
-Eigen::Matrix4f readDef(string filename) {
-    Eigen::Matrix4f deformation;
+Eigen::Affine3f readDef(string filename) {
+    Eigen::Affine3f deformation;
 
     std::ifstream fileStream(filename);
     string line;

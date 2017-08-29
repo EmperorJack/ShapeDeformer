@@ -10,12 +10,12 @@ using std::string;
 
 // Parser declarations
 Mesh* readOFF(string filename);
-Eigen::Matrix4f readDef(string filename);
+Eigen::Affine3f readDef(string filename);
 std::vector<int> readSel(string filename, int vertexCount);
 void writeOFF(string filename, Mesh* mesh);
 
 // Deformation declaration
-void performDeformation(Mesh* mesh, Eigen::Matrix4f handleDeformation, std::vector<int> handleSelection);
+void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vector<int> handleSelection);
 
 int main(int argc, char *argv[]) {
     fprintf(stdout, "ARAP Shape Deformer\n");
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
     // Parse input files
     Mesh* mesh = readOFF(inputFilename);
-    Eigen::Matrix4f handleDeformation = readDef(handleDeformationFilename);
+    Eigen::Affine3f handleDeformation = readDef(handleDeformationFilename);
     std::vector<int> handleSelection = readSel(handleSelectionFilename, (int) mesh->vertices.size());
 
     // Perform the deformation
