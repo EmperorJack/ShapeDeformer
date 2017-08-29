@@ -97,7 +97,6 @@ std::vector<int> readSel(string filename, int vertexCount) {
 }
 
 void writeOFF(string filename, Mesh* mesh) {
-    std::cout << filename << std::endl;
     std::ofstream fileStream(filename);
 
     // Write the first line
