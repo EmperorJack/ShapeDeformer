@@ -3,14 +3,15 @@
 //
 
 #include <iostream>
+#include <mesh.hpp>
 
 using std::string;
 
 // Parser declarations
-void readOFF(string filename);
+Mesh* readOFF(string filename);
 void readDef(string filename);
 void readSel(string filename);
-void writeOFF(string filename);
+void writeOFF(string filename, Mesh* mesh);
 
 // Deformation declaration
 void performDeformation();
@@ -27,7 +28,7 @@ int main(int argc, char *argv[]) {
     string handleDeformationFilename = string(argv[2]);
     string handleSelectionFilename = string(argv[3]);
 
-    readOFF(inputFilename);
+    Mesh* mesh = readOFF(inputFilename);
     readDef(handleDeformationFilename);
     readSel(handleSelectionFilename);
 
@@ -36,7 +37,9 @@ int main(int argc, char *argv[]) {
 
     // Write output file
     string outputFilename = "deformed_" + inputFilename;
-    writeOFF(outputFilename);
+    writeOFF(outputFilename, mesh);
+
+    delete mesh;
 
     return 0;
 }
