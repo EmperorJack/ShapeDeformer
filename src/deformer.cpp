@@ -9,60 +9,30 @@
 
 using namespace Eigen;
 
-SparseMatrix<float> computeAdjacencyMatrix(Mesh* mesh, std::vector<int> handleSelection) {
-    SparseMatrix<float> adjacency(mesh->numVertices, mesh->numVertices);
-    adjacency.reserve(VectorXi::Constant(mesh->numVertices, 7));
-
-    //typedef Eigen::Triplet<double> T;
-    //std::vector<T> tripletList;
-    //tripletList.reserve(estimation_of_entries);
-    //for(...)
-    //{
-        // ...
-        //tripletList.push_back(T(i,j,v_ij));
-    //}
-
-    // Compute the edges by using connectivity information from the faces
-    for (int i = 0; i < mesh->numFaces; i++) {
-        triangle face = mesh->faces[i];
-
-        // Edges are v0 to v1, v0 to v2, v1 to v3
-        if (handleSelection[face.v[0]] == 1 && handleSelection[face.v[1]] == 1)
-            adjacency.coeffRef(face.v[0], face.v[1]) = -1; adjacency.coeffRef(face.v[1], face.v[0]) = -1;
-
-        if (handleSelection[face.v[0]] == 1 && handleSelection[face.v[2]] == 1)
-            adjacency.coeffRef(face.v[0], face.v[2]) = -1; adjacency.coeffRef(face.v[2], face.v[0]) = -1;
-
-        if (handleSelection[face.v[1]] == 1 && handleSelection[face.v[2]] == 1)
-            adjacency.coeffRef(face.v[1], face.v[2]) = -1; adjacency.coeffRef(face.v[2], face.v[1]) = -1;
-    }
-
-    // Compute the uniform weights for each vertex
-    for (int i = 0; i < mesh->numVertices; i++) {
-
-        // Sum the connected edges in the row
-        int d = 0;
-        for (int j = 0; j < mesh->numVertices; j++) {
-            if (adjacency.coeff(i, j) == -1) d++;
-        }
-
-        adjacency.coeffRef(i, i) = d;
-    }
-
-    //adjacency.setFromTriplets(tripletList.begin(), tripletList.end());
-
-    return adjacency;
-}
-
 void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vector<int> handleSelection) {
     // Ax = b
     // A = adjacency matrix
     // x = current guess
     // b = energy
 
+    std::cout << "Computing vertex neighbours" << std::endl;
+
+    mesh->computeNeighbours();
+//    for (int i = 0; i < numVertices; i++) {
+//        std::set<int> cell = neighbours[i];
+//        std::cout << i << ": { ";
+//        for (int j : cell) {
+//            std::cout << j << ", ";
+//        }
+//        std::cout << " }" << std::endl;
+//    };
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     std::cout << "Computing adjacency matrix" << std::endl;
 
-    SparseMatrix<float> adjacency = computeAdjacencyMatrix(mesh, handleSelection);
+    mesh->computeAdjacencyMatrix(handleSelection);
+//    std::cout << mesh->adjacency << std::endl;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -82,12 +52,29 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
     // Compute the energies
     MatrixXf energies(mesh->numVertices, 3);
 
+    for (int i = 0; i < mesh->numVertices; i++) {
+        std::set<int> neighbours = mesh->neighbours[i];
+        Matrix3f rotation = Matrix3f::Identity();
+
+        float weight = neighbours.size();
+
+        Vector3f energy;
+
+        for (int j = 0; j < neighbours.size(); j++) {
+            energy += (weight / 2.0f) * ((rotation) * (mesh->vertices[i] - mesh->vertices[j]));
+        }
+
+        energies.row(i) = energy;
+    }
+
+//    std::cout << energies << std::endl;
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     std::cout << "Solving system" << std::endl;
 
     // Perform a Cholesky factorization of adjacency matrix
-    SimplicialCholesky<SparseMatrix<float>> solver(adjacency);
+    SimplicialCholesky<SparseMatrix<float>> solver(mesh->adjacency);
 
     if(solver.info() != Success) {
         std::cout << "Decomposition failed" << std::endl;
@@ -100,5 +87,9 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
     if(solver.info() != Success) {
         std::cout << "Solving failed" << std::endl;
         return;
+    }
+
+    for (int i = 0; i < mesh->numVertices; i++) {
+        mesh->vertices[i] = guess.row(i);
     }
 }

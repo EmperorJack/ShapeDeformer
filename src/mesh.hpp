@@ -5,8 +5,11 @@
 #ifndef SHAPEDEFORMER_MESH_HPP
 #define SHAPEDEFORMER_MESH_HPP
 
+#include <set>
 #include <vector>
 #include <Eigen>
+
+using namespace Eigen;
 
 struct triangle {
     int v[3];
@@ -15,14 +18,17 @@ struct triangle {
 class Mesh {
 
 public:
-    Mesh(int numVertices, int numFaces) :
-            numVertices(numVertices), numFaces(numFaces) {}
+    Mesh(int numVertices, int numFaces);
+    void computeNeighbours();
+    void computeAdjacencyMatrix(std::vector<int> handleSelection);
 
     int numVertices;
     int numFaces;
 
-    std::vector<Eigen::Vector3f> vertices;
+    std::vector<Vector3f> vertices;
     std::vector<triangle> faces;
+    std::vector<std::set<int>> neighbours;
+    SparseMatrix<float> adjacency;
 
 };
 
