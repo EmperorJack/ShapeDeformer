@@ -32,66 +32,49 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
     std::cout << "Computing adjacency matrix" << std::endl;
 
     mesh->computeAdjacencyMatrix(handleSelection);
-    std::cout << mesh->adjacency << std::endl;
+
+//    std::cout << mesh->adjacency << std::endl;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    std::cout << "Applying constraints to adjacency matrix" << std::endl;
+    std::cout << "Initialise updated vertices" << std::endl;
 
-    int nc = 0;
+    mesh->verticesUpdated.resize((size_t) mesh->numVertices, Vector3f::Zero());
 
-    // Apply transform to handle constraints from A
     for (int i = 0; i < mesh->numVertices; i++) {
-        if (handleSelection[i] == 0) {
-            mesh->adjacency.coeffRef(mesh->numVertices + nc, i) = 1;
-            nc++;
-        } else if (handleSelection[i] == 2) {
-            mesh->adjacency.coeffRef(mesh->numVertices + nc, i) = 1;
-            nc++;
+        if (handleSelection[i] == 1) {
+            mesh->verticesUpdated[i] = Vector3f(mesh->vertices[i]);
+        } else {
+            mesh->verticesUpdated[i] = handleDeformation * mesh->vertices[i];
         }
     }
-
-    std::cout << mesh->adjacency << std::endl;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     std::cout << "Computing energies" << std::endl;
 
     // Compute the energies
-    MatrixXf energies(mesh->numVertices, 3);
+    MatrixXf energies = MatrixXf::Zero(mesh->numVertices, 3);
 
     for (int i = 0; i < mesh->numVertices; i++) {
         std::set<int> neighbours = mesh->neighbours[i];
+
         Matrix3f rotation = Matrix3f::Identity();
 
-        float weight = neighbours.size();
-
-        Vector3f energy;
+        float weight = 1.0f / ((float) neighbours.size());
 
         for (int j = 0; j < neighbours.size(); j++) {
-            energy += (weight / 2.0f) * ((rotation) * (mesh->vertices[i] - mesh->vertices[j]));
-        }
+            Vector3f vec = (weight / 2.0f) * (rotation) * (mesh->vertices[i] - mesh->vertices[j]);
 
-        energies.row(i) = energy;
-    }
+            energies.row(i) += vec;
 
-    std::cout << energies << std::endl;
-
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    std::cout << "Applying constraints to energies" << std::endl;
-
-    // Apply transform to handle constraints from A
-    for (int i = 0; i < mesh->numVertices; i++) {
-        if (handleSelection[i] == 0) {
-            energies.row(i) = mesh->vertices[i];
-        } else if (handleSelection[i] == 2) {
-            energies.row(i) = handleDeformation * mesh->vertices[i];
-            mesh->vertices[i] = handleDeformation * mesh->vertices[i];
+            if (handleSelection[j] != 1) {
+                energies.row(i) += weight * mesh->verticesUpdated[j];
+            }
         }
     }
 
-    std::cout << energies << std::endl;
+//    std::cout << energies << std::endl;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -111,18 +94,16 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
     std::cout << "Solving system" << std::endl;
 
     // Solve the factorisation for a new set of points
-    MatrixXf guess = solver.solve(energies);
+    MatrixXf solution = solver.solve(energies);
 
     if(solver.info() != Success) {
         std::cout << "Solving failed" << std::endl;
         return;
     }
 
-    std::cout << guess << std::endl;
+//    std::cout << solution << std::endl;
 
     for (int i = 0; i < mesh->numVertices; i++) {
-        if (handleSelection[i] == 1) {
-            mesh->vertices[i] = guess.row(i);
-        }
+        mesh->vertices[i] = solution.row(i);
     }
 }

@@ -26,6 +26,7 @@ public:
     int numFaces;
 
     std::vector<Vector3f> vertices;
+    std::vector<Vector3f> verticesUpdated;
     std::vector<triangle> faces;
     std::vector<std::set<int>> neighbours;
     SparseMatrix<float> adjacency;

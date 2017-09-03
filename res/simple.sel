@@ -1,8 +1,8 @@
 # per vertex status: 0=fixed, 1=deformable-region, 2=handle
 # 4802 vertices
 1
-0
+1
 2
+1
 0
-1
-1
+0

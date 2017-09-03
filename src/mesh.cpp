@@ -33,36 +33,20 @@ void Mesh::computeNeighbours() {
 }
 
 void Mesh::computeAdjacencyMatrix(std::vector<int> handleSelection) {
-    SparseMatrix<float> adjacency(numVertices + 3, numVertices);
-    adjacency.reserve(VectorXi::Constant(numVertices, 7));
+    adjacency.resize(numVertices, numVertices);
+    //adjacency.reserve(VectorXi::Constant(numVertices, 7));
 
-    // Compute the edges by using connectivity information from the faces
-    for (int i = 0; i < numFaces; i++) {
-        triangle face = faces[i];
-
-        // Edges are v0 to v1, v0 to v2, v1 to v3
-        if (true || handleSelection[face.v[0]] == 1 && handleSelection[face.v[1]] == 1) {
-            adjacency.coeffRef(face.v[0], face.v[1]) = -1;
-            adjacency.coeffRef(face.v[1], face.v[0]) = -1;
-        }
-
-        if (true || handleSelection[face.v[0]] == 1 && handleSelection[face.v[2]] == 1) {
-            adjacency.coeffRef(face.v[0], face.v[2]) = -1;
-            adjacency.coeffRef(face.v[2], face.v[0]) = -1;
-        }
-
-        if (true || handleSelection[face.v[1]] == 1 && handleSelection[face.v[2]] == 1) {
-            adjacency.coeffRef(face.v[1], face.v[2]) = -1;
-            adjacency.coeffRef(face.v[2], face.v[1]) = -1;
-        }
-    }
-
-    // Compute the uniform weights for each vertex
     for (int i = 0; i < numVertices; i++) {
-        if (true || handleSelection[i] == 1) {
-            adjacency.coeffRef(i, i) = neighbours[i].size();
+        for (int j = 0; j < neighbours[j].size(); j++) {
+            float weight = 1.0f / ((float) neighbours.size());
+
+            adjacency.coeffRef(i, i) += weight;
+
+            if (handleSelection[j] == 1) {
+                adjacency.coeffRef(i, j) -= weight;
+            }
         }
     }
 
-    this->adjacency = adjacency;
+    adjacency.makeCompressed();
 }
