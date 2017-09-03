@@ -33,7 +33,7 @@ void Mesh::computeNeighbours() {
 }
 
 void Mesh::computeAdjacencyMatrix(std::vector<int> handleSelection) {
-    SparseMatrix<float> adjacency(numVertices, numVertices);
+    SparseMatrix<float> adjacency(numVertices + 3, numVertices);
     adjacency.reserve(VectorXi::Constant(numVertices, 7));
 
     // Compute the edges by using connectivity information from the faces
@@ -41,18 +41,28 @@ void Mesh::computeAdjacencyMatrix(std::vector<int> handleSelection) {
         triangle face = faces[i];
 
         // Edges are v0 to v1, v0 to v2, v1 to v3
-        //if (handleSelection[face.v[0]] == 1 && handleSelection[face.v[1]] == 1)
-        adjacency.coeffRef(face.v[0], face.v[1]) = -1; adjacency.coeffRef(face.v[1], face.v[0]) = -1;
+        if (true || handleSelection[face.v[0]] == 1 && handleSelection[face.v[1]] == 1) {
+            adjacency.coeffRef(face.v[0], face.v[1]) = -1;
+            adjacency.coeffRef(face.v[1], face.v[0]) = -1;
+        }
 
-        //if (handleSelection[face.v[0]] == 1 && handleSelection[face.v[2]] == 1)
-        adjacency.coeffRef(face.v[0], face.v[2]) = -1; adjacency.coeffRef(face.v[2], face.v[0]) = -1;
+        if (true || handleSelection[face.v[0]] == 1 && handleSelection[face.v[2]] == 1) {
+            adjacency.coeffRef(face.v[0], face.v[2]) = -1;
+            adjacency.coeffRef(face.v[2], face.v[0]) = -1;
+        }
 
-        //if (handleSelection[face.v[1]] == 1 && handleSelection[face.v[2]] == 1)
-        adjacency.coeffRef(face.v[1], face.v[2]) = -1; adjacency.coeffRef(face.v[2], face.v[1]) = -1;
+        if (true || handleSelection[face.v[1]] == 1 && handleSelection[face.v[2]] == 1) {
+            adjacency.coeffRef(face.v[1], face.v[2]) = -1;
+            adjacency.coeffRef(face.v[2], face.v[1]) = -1;
+        }
     }
 
     // Compute the uniform weights for each vertex
     for (int i = 0; i < numVertices; i++) {
-        adjacency.coeffRef(i, i) = neighbours[i].size();
+        if (true || handleSelection[i] == 1) {
+            adjacency.coeffRef(i, i) = neighbours[i].size();
+        }
     }
+
+    this->adjacency = adjacency;
 }

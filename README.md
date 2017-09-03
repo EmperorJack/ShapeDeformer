@@ -12,3 +12,6 @@ Bar Usage:
 
 Cactus Usage:
 "../res/cactus.off" "../res/cactus.def" "../res/cactus.sel" "cactus-deformed.off"
+
+Simple Usage:
+"../res/simple.off" "../res/simple.def" "../res/simple.sel" "simple-deformed.off"
