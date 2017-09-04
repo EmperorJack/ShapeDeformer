@@ -14,13 +14,11 @@ Solver::Solver(vector<Vector3f> vertices, vector<triangle> faces, Affine3f handl
 
     std::cout << "Initialise updated vertices" << std::endl;
 
-    verticesUpdated.resize((size_t) numVertices, Vector3f::Zero());
-
     for (int i = 0; i < numVertices; i++) {
         if (handleSelection[i] == 2) {
-            verticesUpdated[i] = handleDeformation * vertices[i];
+            verticesUpdated.push_back(handleDeformation * vertices[i]);
         } else {
-            verticesUpdated[i] = vertices[i];
+            verticesUpdated.push_back(vertices[i]);
         }
     }
 }
@@ -39,8 +37,8 @@ void Solver::preProcess() {
     systemSolver.compute(laplaceBeltrami);
 
     if(systemSolver.info() != Success) {
-        std::cout << "Decomposition failed" << std::endl;
-        return;
+        std::cout << "Factorisation failed" << std::endl;
+        exit(-1);
     }
 }
 
@@ -92,10 +90,9 @@ void Solver::computeLaplaceBeltrami(std::vector<int> handleSelection) {
 }
 
 void Solver::solveIteration() {
-    std::cout << "Computing energies" << std::endl;
 
-    // Compute the energies
-    MatrixXf energies = MatrixXf::Zero(numVertices, 3);
+    // Compute the RHS
+    MatrixXf rhs = MatrixXf::Zero(numVertices, 3);
 
     for (int i = 0; i < numVertices; i++) {
         Matrix3f rotation = Matrix3f::Identity();
@@ -104,22 +101,20 @@ void Solver::solveIteration() {
 
         for (int j : neighbours[i]) {
             Vector3f vec = (weight / 2.0f) * (rotation) * (vertices[i] - vertices[j]);
-            energies.row(i) += vec;
+            rhs.row(i) += vec;
 
             if (handleSelection[j] != 1) {
-                energies.row(i) += weight * verticesUpdated[j];
+                rhs.row(i) += weight * verticesUpdated[j];
             }
         }
     }
 
-    std::cout << "Solving system" << std::endl;
-
-    // Solve the factorisation for a new set of points
-    MatrixXf solution = systemSolver.solve(energies);
+    // Solve the factorisation for a new set of vertices
+    MatrixXf solution = systemSolver.solve(rhs);
 
     if (systemSolver.info() != Success) {
         std::cout << "Solving failed" << std::endl;
-        return;
+        exit(-1);
     }
 
     for (int i = 0; i < numVertices; i++) {
@@ -131,4 +126,22 @@ void Solver::solveIteration() {
 
 void Solver::postProcess() {
 
+}
+
+float Solver::computeEnergy() {
+    float energy = 0.0f;
+
+    for (int i = 0; i < numVertices; i++) {
+        for (int j : neighbours[i]) {
+            Matrix3f rotation = Matrix3f::Identity();
+
+            float weight = weights.coeff(i);
+
+            Vector3f vec = (verticesUpdated[i] - verticesUpdated[j]) - rotation * (vertices[i] - vertices[j]);
+
+            energy += weight * vec.squaredNorm();
+        }
+    }
+
+    return energy;
 }

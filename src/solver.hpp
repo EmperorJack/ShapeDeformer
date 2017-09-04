@@ -22,17 +22,16 @@ class Solver {
 public:
     Solver(vector<Vector3f> vertices, vector<triangle> faces, Affine3f handleDeformation, vector<int> handleSelection);
 
-    // Pre-processing
     void preProcess();
     void computeNeighbours();
     void computeWeights();
     void computeLaplaceBeltrami(vector<int> handleSelection);
 
-    // Solving
     void solveIteration();
 
-    // Post-processing
     void postProcess();
+
+    float computeEnergy();
 
     int numVertices;
     int numFaces;

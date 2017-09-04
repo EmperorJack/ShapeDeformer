@@ -9,14 +9,14 @@
 using std::string;
 using std::vector;
 
+const int NUM_ITERATIONS = 1;
+const float CONVERGENCE_THRESHOLD = 1.0f;
+
 // Parser declarations
 void readOFF(string filename, vector<Vector3f> &vertices, vector<triangle> &faces);
 Eigen::Affine3f readDef(string filename);
 std::vector<int> readSel(string filename, int vertexCount);
 void writeOFF(string filename, vector<Vector3f> vertices, vector<triangle> faces);
-
-// Deformation declaration
-void performDeformation(Solver* solver, Eigen::Affine3f handleDeformation, std::vector<int> handleSelection);
 
 int main(int argc, char *argv[]) {
     fprintf(stdout, "ARAP Shape Deformer\n");
@@ -46,9 +46,19 @@ int main(int argc, char *argv[]) {
 
     // Perform the deformation algorithm
     solver->preProcess();
-    for (int iteration = 0; iteration < 1; iteration++) {
+
+    float energy = solver->computeEnergy();
+    std::cout << "Initial energy: " << energy << std::endl;
+
+    for (int iteration = 0; iteration < NUM_ITERATIONS && energy > CONVERGENCE_THRESHOLD; iteration++) {
         solver->solveIteration();
+
+        energy = solver->computeEnergy();
+        std::cout << "Iteration " << iteration << " energy: " << energy << std::endl;
     }
+
+    std::cout << "Final energy: " << energy << std::endl;
+
     solver->postProcess();
 
     // Write output file
