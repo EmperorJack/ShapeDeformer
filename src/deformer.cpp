@@ -11,7 +11,7 @@ using namespace Eigen;
 
 void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vector<int> handleSelection) {
     // Ax = b
-    // A = adjacency matrix
+    // A = laplaceBeltrami matrix
     // x = current guess
     // b = energy
 
@@ -29,19 +29,25 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    std::cout << "Computing adjacency matrix" << std::endl;
+    std::cout << "Computing weights" << std::endl;
 
-    mesh->computeAdjacencyMatrix(handleSelection);
+    mesh->computeWeights();
 
-//    std::cout << mesh->adjacency << std::endl;
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    std::cout << "Computing laplace beltrami matrix" << std::endl;
+
+    mesh->computeLaplaceBeltrami(handleSelection);
+
+//    std::cout << mesh->laplaceBeltrami << std::endl;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     std::cout << "Factorising system" << std::endl;
 
-    // Perform a Cholesky factorization of adjacency matrix
+    // Perform a Cholesky factorization of laplaceBeltrami matrix
     SparseLU<SparseMatrix<float>> solver;
-    solver.compute(mesh->adjacency);
+    solver.compute(mesh->laplaceBeltrami);
 
     if(solver.info() != Success) {
         std::cout << "Decomposition failed" << std::endl;
@@ -76,7 +82,7 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
 
             Matrix3f rotation = Matrix3f::Identity();
 
-            float weight = 1.0f / ((float) neighbours.size());
+            float weight = mesh->weights.coeff(i);
 
             for (int j : neighbours) {
                 Vector3f vec = (weight / 2.0f) * (rotation) * (mesh->vertices[i] - mesh->vertices[j]);

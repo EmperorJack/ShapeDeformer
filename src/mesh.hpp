@@ -20,7 +20,8 @@ class Mesh {
 public:
     Mesh(int numVertices, int numFaces);
     void computeNeighbours();
-    void computeAdjacencyMatrix(std::vector<int> handleSelection);
+    void computeWeights();
+    void computeLaplaceBeltrami(std::vector<int> handleSelection);
 
     int numVertices;
     int numFaces;
@@ -28,8 +29,11 @@ public:
     std::vector<Vector3f> vertices;
     std::vector<Vector3f> verticesUpdated;
     std::vector<triangle> faces;
+
     std::vector<std::set<int>> neighbours;
-    SparseMatrix<float> adjacency;
+
+    VectorXf weights;
+    SparseMatrix<float> laplaceBeltrami;
 
 };
 

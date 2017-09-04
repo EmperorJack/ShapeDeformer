@@ -32,21 +32,29 @@ void Mesh::computeNeighbours() {
     }
 }
 
-void Mesh::computeAdjacencyMatrix(std::vector<int> handleSelection) {
-    adjacency.resize(numVertices, numVertices);
-    adjacency.reserve(VectorXi::Constant(numVertices, 7));
+void Mesh::computeWeights() {
+    weights.resize(numVertices);
+
+    for (int i = 0; i < numVertices; i++) {
+        weights.coeffRef(i) = 1.0f / ((float) neighbours[i].size());
+    }
+}
+
+void Mesh::computeLaplaceBeltrami(std::vector<int> handleSelection) {
+    laplaceBeltrami.resize(numVertices, numVertices);
+    laplaceBeltrami.reserve(VectorXi::Constant(numVertices, 7));
 
     for (int i = 0; i < numVertices; i++) {
         for (int j : neighbours[i]) {
-            float weight = 1.0f / ((float) neighbours[i].size());
+            float weight = weights.coeff(i);
 
-            adjacency.coeffRef(i, i) += weight;
+            laplaceBeltrami.coeffRef(i, i) += weight;
 
             if (handleSelection[j] == 1) {
-                adjacency.coeffRef(i, j) -= weight;
+                laplaceBeltrami.coeffRef(i, j) -= weight;
             }
         }
     }
 
-    adjacency.makeCompressed();
+    laplaceBeltrami.makeCompressed();
 }
