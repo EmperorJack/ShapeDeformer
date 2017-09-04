@@ -3,19 +3,20 @@
 //
 
 #include <iostream>
-#include <mesh.hpp>
+#include <solver.hpp>
 #include <Eigen>
 
 using std::string;
+using std::vector;
 
 // Parser declarations
-Mesh* readOFF(string filename);
+void readOFF(string filename, vector<Vector3f> &vertices, vector<triangle> &faces);
 Eigen::Affine3f readDef(string filename);
 std::vector<int> readSel(string filename, int vertexCount);
-void writeOFF(string filename, Mesh* mesh);
+void writeOFF(string filename, vector<Vector3f> vertices, vector<triangle> faces);
 
 // Deformation declaration
-void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vector<int> handleSelection);
+void performDeformation(Solver* solver, Eigen::Affine3f handleDeformation, std::vector<int> handleSelection);
 
 int main(int argc, char *argv[]) {
     fprintf(stdout, "ARAP Shape Deformer\n");
@@ -32,18 +33,28 @@ int main(int argc, char *argv[]) {
     string handleSelectionFilename = string(argv[3]);
     string outputFilename = string(argv[4]);
 
-    // Parse input files
-    Mesh* mesh = readOFF(inputFilename);
-    Eigen::Affine3f handleDeformation = readDef(handleDeformationFilename);
-    std::vector<int> handleSelection = readSel(handleSelectionFilename, (int) mesh->vertices.size());
+    vector<Vector3f> vertices;
+    vector<triangle> faces;
 
-    // Perform the deformation
-    performDeformation(mesh, handleDeformation, handleSelection);
+    // Parse input files
+    readOFF(inputFilename, vertices, faces);
+    Eigen::Affine3f handleDeformation = readDef(handleDeformationFilename);
+    vector<int> handleSelection = readSel(handleSelectionFilename, (int) vertices.size());
+
+    // Setup the solver
+    Solver* solver = new Solver(vertices, faces, handleDeformation, handleSelection);
+
+    // Perform the deformation algorithm
+    solver->preProcess();
+    for (int iteration = 0; iteration < 1; iteration++) {
+        solver->solveIteration();
+    }
+    solver->postProcess();
 
     // Write output file
-    writeOFF(outputFilename, mesh);
+    writeOFF(outputFilename, solver->verticesUpdated, faces);
 
-    delete mesh;
+    delete solver;
 
     return 0;
 }

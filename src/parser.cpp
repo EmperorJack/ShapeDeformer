@@ -6,11 +6,11 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <mesh.hpp>
+#include <solver.hpp>
 
 using std::string;
 
-Mesh* readOFF(string filename) {
+void readOFF(string filename, vector<Vector3f> &vertices, vector<triangle> &faces) {
     std::ifstream fileStream(filename);
     string line;
 
@@ -24,8 +24,6 @@ Mesh* readOFF(string filename) {
     std::istringstream lineTokens(line);
     lineTokens >> vertexCount >> faceCount >> edgeCount;
 
-    Mesh* mesh = new Mesh(vertexCount, faceCount);
-
     // Read each vertex
     for (int i = 0; i < vertexCount; i++) {
         Eigen::Vector3f vertex;
@@ -34,7 +32,7 @@ Mesh* readOFF(string filename) {
         std::istringstream vertexTokens(line);
         vertexTokens >> vertex[0] >> vertex[1] >> vertex[2];
 
-        mesh->vertices.push_back(vertex);
+        vertices.push_back(vertex);
     }
 
     // Read each triangle
@@ -46,10 +44,8 @@ Mesh* readOFF(string filename) {
         std::istringstream faceTokens(line);
         faceTokens >> numVertices >> face.v[0] >> face.v[1] >> face.v[2];
 
-        mesh->faces.push_back(face);
+        faces.push_back(face);
     }
-
-    return mesh;
 }
 
 Eigen::Affine3f readDef(string filename) {
@@ -96,24 +92,24 @@ std::vector<int> readSel(string filename, int vertexCount) {
     return selection;
 }
 
-void writeOFF(string filename, Mesh* mesh) {
+void writeOFF(string filename, vector<Vector3f> vertices, vector<triangle> faces) {
     std::ofstream fileStream(filename);
 
     // Write the first line
     fileStream << "OFF" << "\n";
 
     // Write the vertex, face and edge counts
-    fileStream << mesh->vertices.size() << " " << mesh->faces.size() << " " << 0 << "\n";
+    fileStream << vertices.size() << " " << faces.size() << " " << 0 << "\n";
 
     // Write each vertex
-    for (int i = 0; i < mesh->vertices.size(); i++) {
-        Eigen::Vector3f vertex = mesh->vertices[i];
+    for (int i = 0; i < vertices.size(); i++) {
+        Eigen::Vector3f vertex = vertices[i];
         fileStream << vertex[0] << " " << vertex[1] << " " << vertex[2] << "\n";
     }
 
     // Write each triangle
-    for (int i = 0; i < mesh->faces.size(); i++) {
-        triangle face = mesh->faces[i];
+    for (int i = 0; i < faces.size(); i++) {
+        triangle face = faces[i];
         int numVertices = 3; // Should always be 3
         fileStream << numVertices << " " << face.v[0] << " " << face.v[1] << " " << face.v[2] << "\n";
     }
