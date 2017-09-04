@@ -33,26 +33,18 @@ void Mesh::computeNeighbours() {
 }
 
 void Mesh::computeAdjacencyMatrix(std::vector<int> handleSelection) {
-    adjacency.resize(numVertices + 3, numVertices + 3);
-    //adjacency.reserve(VectorXi::Constant(numVertices, 7));
-
-    int nc = 0;
+    adjacency.resize(numVertices, numVertices);
+    adjacency.reserve(VectorXi::Constant(numVertices, 7));
 
     for (int i = 0; i < numVertices; i++) {
-        for (int j = 0; j < neighbours[j].size(); j++) {
-            float weight = 1.0f / ((float) neighbours.size());
+        for (int j : neighbours[i]) {
+            float weight = 1.0f / ((float) neighbours[i].size());
 
             adjacency.coeffRef(i, i) += weight;
 
             if (handleSelection[j] == 1) {
                 adjacency.coeffRef(i, j) -= weight;
             }
-        }
-
-        if (handleSelection[i] != 1) {
-            adjacency.coeffRef(numVertices + nc, i) = 1;
-            adjacency.coeffRef(i, numVertices + nc) = 1;
-            nc++;
         }
     }
 

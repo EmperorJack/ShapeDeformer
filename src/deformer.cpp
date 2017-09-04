@@ -69,9 +69,7 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
         std::cout << "Computing energies" << std::endl;
 
         // Compute the energies
-        MatrixXf energies = MatrixXf::Zero(mesh->numVertices + 3, 3);
-
-        int nc = 0;
+        MatrixXf energies = MatrixXf::Zero(mesh->numVertices, 3);
 
         for (int i = 0; i < mesh->numVertices; i++) {
             std::set<int> neighbours = mesh->neighbours[i];
@@ -80,18 +78,13 @@ void performDeformation(Mesh* mesh, Eigen::Affine3f handleDeformation, std::vect
 
             float weight = 1.0f / ((float) neighbours.size());
 
-            for (int j = 0; j < neighbours.size(); j++) {
+            for (int j : neighbours) {
                 Vector3f vec = (weight / 2.0f) * (rotation) * (mesh->vertices[i] - mesh->vertices[j]);
                 energies.row(i) += vec;
 
                 if (handleSelection[j] != 1) {
                     energies.row(i) += weight * mesh->verticesUpdated[j];
                 }
-            }
-
-            if (handleSelection[i] != 1) {
-                energies.row(mesh->numVertices + nc) = mesh->verticesUpdated[i];
-                nc++;
             }
         }
 
