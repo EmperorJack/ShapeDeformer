@@ -13,10 +13,10 @@ const int NUM_ITERATIONS = 30;
 const float CONVERGENCE_THRESHOLD = 0.0001f;
 
 // Parser declarations
-void readOFF(string filename, vector<Vector3f> &vertices, vector<triangle> &faces);
+void readOFF(string filename, vector<Vector3f> &vertices, vector<Triangle> &faces);
 Eigen::Affine3f readDef(string filename);
 std::vector<int> readSel(string filename, int vertexCount);
-void writeOFF(string filename, vector<Vector3f> vertices, vector<triangle> faces);
+void writeOFF(string filename, vector<Vector3f> vertices, vector<Triangle> faces);
 
 int main(int argc, char *argv[]) {
     fprintf(stdout, "ARAP Shape Deformer\n");
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     string outputFilename = string(argv[4]);
 
     vector<Vector3f> vertices;
-    vector<triangle> faces;
+    vector<Triangle> faces;
 
     // Parse input files
     readOFF(inputFilename, vertices, faces);

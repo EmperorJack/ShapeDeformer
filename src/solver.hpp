@@ -13,19 +13,25 @@ using std::set;
 using std::vector;
 using namespace Eigen;
 
-struct triangle {
+enum VertexType {
+    Free,
+    Fixed,
+    Handle
+};
+
+struct Triangle {
     int v[3];
 };
 
 class Solver {
 
 public:
-    Solver(vector<Vector3f> vertices, vector<triangle> faces, Affine3f handleDeformation, vector<int> handleSelection);
+    Solver(vector<Vector3f> vertices, vector<Triangle> faces, Affine3f handleDeformation, vector<int> handleSelection);
 
     void preProcess();
     void computeNeighbours();
     void computeWeights();
-    void computeLaplaceBeltrami(vector<int> handleSelection);
+    void computeLaplaceBeltrami();
 
     void computeRotations();
     void solveIteration();
@@ -37,17 +43,18 @@ public:
     int numVertices;
     int numFaces;
 
-    // Mesh information
+    int numFreeVertices;
+    int numFixedVerties;
+
     vector<Vector3f> vertices;
     vector<Vector3f> verticesUpdated;
-    vector<triangle> faces;
+    vector<Triangle> faces;
     vector<set<int>> neighbours;
 
-    // Handle information
-    Affine3f handleDeformation;
-    vector<int> handleSelection;
+    vector<VertexType> vertexTypes;
+    vector<int> freeVertices;
+    vector<int> fixedVertices;
 
-    // Algorithm information
     vector<float> weights;
     vector<MatrixXf> rotations;
     SparseMatrix<float> laplaceBeltrami;

@@ -10,7 +10,7 @@
 
 using std::string;
 
-void readOFF(string filename, vector<Vector3f> &vertices, vector<triangle> &faces) {
+void readOFF(string filename, vector<Vector3f> &vertices, vector<Triangle> &faces) {
     std::ifstream fileStream(filename);
     string line;
 
@@ -37,7 +37,7 @@ void readOFF(string filename, vector<Vector3f> &vertices, vector<triangle> &face
 
     // Read each triangle
     for (int i = 0; i < faceCount; i++) {
-        triangle face;
+        Triangle face;
         int numVertices; // Should always be 3
 
         std::getline(fileStream, line);
@@ -92,7 +92,7 @@ std::vector<int> readSel(string filename, int vertexCount) {
     return selection;
 }
 
-void writeOFF(string filename, vector<Vector3f> vertices, vector<triangle> faces) {
+void writeOFF(string filename, vector<Vector3f> vertices, vector<Triangle> faces) {
     std::ofstream fileStream(filename);
 
     // Write the first line
@@ -109,7 +109,7 @@ void writeOFF(string filename, vector<Vector3f> vertices, vector<triangle> faces
 
     // Write each triangle
     for (int i = 0; i < faces.size(); i++) {
-        triangle face = faces[i];
+        Triangle face = faces[i];
         int numVertices = 3; // Should always be 3
         fileStream << numVertices << " " << face.v[0] << " " << face.v[1] << " " << face.v[2] << "\n";
     }

@@ -7,10 +7,38 @@
 
 using namespace Eigen;
 
-Solver::Solver(vector<Vector3f> vertices, vector<triangle> faces, Affine3f handleDeformation, vector<int> handleSelection) :
-        vertices(vertices), faces(faces), handleDeformation(handleDeformation), handleSelection(handleSelection) {
+Solver::Solver(vector<Vector3f> vertices, vector<Triangle> faces, Affine3f handleDeformation, vector<int> handleSelection) :
+        vertices(vertices), faces(faces) {
     this->numVertices = (int) vertices.size();
     this->numFaces = (int) faces.size();
+
+    std::cout << "Computing free vs fixed vertices" << std::endl;
+
+    for (int i = 0; i < numVertices; i++) {
+        if (handleSelection[i] == 0) {
+            fixedVertices.push_back(i);
+            vertexTypes.push_back(Fixed);
+        } else if (handleSelection[i] == 1) {
+            freeVertices.push_back(i);
+            vertexTypes.push_back(Free);
+        } else if (handleSelection[i] == 2) {
+            fixedVertices.push_back(i);
+            vertexTypes.push_back(Handle);
+        }
+    }
+
+    numFreeVertices = freeVertices.size();
+    numFixedVerties = fixedVertices.size();
+
+    std::cout << "Initializing updated vertices" << std::endl;
+
+    for (int i = 0; i < numVertices; i++) {
+        if (vertexTypes[i] == Handle) {
+            verticesUpdated.push_back(handleDeformation * vertices[i]);
+        } else {
+            verticesUpdated.push_back(vertices[i]);
+        }
+    }
 }
 
 void Solver::preProcess() {
@@ -20,23 +48,13 @@ void Solver::preProcess() {
     std::cout << "Computing weights" << std::endl;
     computeWeights();
 
-    std::cout << "Initializing updated vertices" << std::endl;
-
-    for (int i = 0; i < numVertices; i++) {
-        if (handleSelection[i] == 2) {
-            verticesUpdated.push_back(handleDeformation * vertices[i]);
-        } else {
-            verticesUpdated.push_back(vertices[i]);
-        }
-    }
-
     std::cout << "Initializing rotations" << std::endl;
 
     rotations.resize((size_t) numVertices, Matrix3f::Zero());
     computeRotations();
 
     std::cout << "Computing laplace beltrami matrix" << std::endl;
-    computeLaplaceBeltrami(handleSelection);
+    computeLaplaceBeltrami();
 
     std::cout << "Factorising system" << std::endl;
     systemSolver.compute(laplaceBeltrami);
@@ -54,7 +72,7 @@ void Solver::computeNeighbours() {
     }
 
     for (int i = 0; i < numFaces; i++) {
-        triangle face = faces[i];
+        Triangle face = faces[i];
 
         neighbours[face.v[0]].insert(face.v[1]);
         neighbours[face.v[0]].insert(face.v[2]);
@@ -71,7 +89,7 @@ void Solver::computeWeights() {
     weights.resize((size_t) numVertices, 1.0f);
 }
 
-void Solver::computeLaplaceBeltrami(std::vector<int> handleSelection) {
+void Solver::computeLaplaceBeltrami() {
     laplaceBeltrami.resize(numVertices, numVertices);
     laplaceBeltrami.reserve(VectorXi::Constant(numVertices, 7));
 
@@ -81,7 +99,7 @@ void Solver::computeLaplaceBeltrami(std::vector<int> handleSelection) {
 
             laplaceBeltrami.coeffRef(i, i) += weight;
 
-            if (handleSelection[j] == 1) {
+            if (vertexTypes[j] == Free) {
                 laplaceBeltrami.coeffRef(i, j) -= weight;
             }
         }
@@ -113,7 +131,6 @@ void Solver::computeRotations() {
 
 void Solver::solveIteration() {
 
-    // Compute rotations
     computeRotations();
 
     // Compute the RHS
@@ -126,7 +143,7 @@ void Solver::solveIteration() {
             Vector3f vec = (weight / 2.0f) * (rotations[i] + rotations[j]) * (vertices[i] - vertices[j]);
             rhs.row(i) += vec;
 
-            if (handleSelection[j] != 1) {
+            if (vertexTypes[j] != Free) {
                 rhs.row(i) += weight * verticesUpdated[j];
             }
         }
@@ -141,7 +158,7 @@ void Solver::solveIteration() {
     }
 
     for (int i = 0; i < numVertices; i++) {
-        if (handleSelection[i] == 1) {
+        if (vertexTypes[i] == Free) {
             verticesUpdated[i] = solution.row(i);
         }
     }
