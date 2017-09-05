@@ -19,6 +19,14 @@ enum VertexType {
     Handle
 };
 
+struct VertexInfo {
+    VertexInfo(VertexType type, int pos) :
+        type(type), pos(pos) {}
+
+    VertexType type;
+    int pos;
+};
+
 struct Triangle {
     int v[3];
 };
@@ -51,7 +59,7 @@ public:
     vector<Triangle> faces;
     vector<set<int>> neighbours;
 
-    vector<VertexType> vertexTypes;
+    vector<VertexInfo> vertexInformation;
     vector<int> freeVertices;
     vector<int> fixedVertices;
 

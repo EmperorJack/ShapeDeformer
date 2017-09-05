@@ -16,14 +16,14 @@ Solver::Solver(vector<Vector3f> vertices, vector<Triangle> faces, Affine3f handl
 
     for (int i = 0; i < numVertices; i++) {
         if (handleSelection[i] == 0) {
+            vertexInformation.push_back(VertexInfo(Fixed, fixedVertices.size()));
             fixedVertices.push_back(i);
-            vertexTypes.push_back(Fixed);
         } else if (handleSelection[i] == 1) {
+            vertexInformation.push_back(VertexInfo(Free, freeVertices.size()));
             freeVertices.push_back(i);
-            vertexTypes.push_back(Free);
         } else if (handleSelection[i] == 2) {
+            vertexInformation.push_back(VertexInfo(Handle, fixedVertices.size()));
             fixedVertices.push_back(i);
-            vertexTypes.push_back(Handle);
         }
     }
 
@@ -33,7 +33,7 @@ Solver::Solver(vector<Vector3f> vertices, vector<Triangle> faces, Affine3f handl
     std::cout << "Initializing updated vertices" << std::endl;
 
     for (int i = 0; i < numVertices; i++) {
-        if (vertexTypes[i] == Handle) {
+        if (vertexInformation[i].type == Handle) {
             verticesUpdated.push_back(handleDeformation * vertices[i]);
         } else {
             verticesUpdated.push_back(vertices[i]);
@@ -90,17 +90,19 @@ void Solver::computeWeights() {
 }
 
 void Solver::computeLaplaceBeltrami() {
-    laplaceBeltrami.resize(numVertices, numVertices);
-    laplaceBeltrami.reserve(VectorXi::Constant(numVertices, 7));
+    laplaceBeltrami.resize(numFreeVertices, numFreeVertices);
+    laplaceBeltrami.reserve(VectorXi::Constant(numFreeVertices, 7));
 
-    for (int i = 0; i < numVertices; i++) {
-        for (int j : neighbours[i]) {
-            float weight = weights[i];
+    for (int i = 0; i < numFreeVertices; i++) {
+        int iPos = freeVertices[i];
+
+        for (int jPos : neighbours[iPos]) {
+            float weight = weights[iPos];
 
             laplaceBeltrami.coeffRef(i, i) += weight;
 
-            if (vertexTypes[j] == Free) {
-                laplaceBeltrami.coeffRef(i, j) -= weight;
+            if (vertexInformation[jPos].type == Free) {
+                laplaceBeltrami.coeffRef(i, vertexInformation[jPos].pos) -= weight;
             }
         }
     }
@@ -134,17 +136,19 @@ void Solver::solveIteration() {
     computeRotations();
 
     // Compute the RHS
-    MatrixXf rhs = MatrixXf::Zero(numVertices, 3);
+    MatrixXf rhs = MatrixXf::Zero(numFreeVertices, 3);
 
-    for (int i = 0; i < numVertices; i++) {
-        for (int j : neighbours[i]) {
-            float weight = weights[i];
+    for (int i = 0; i < numFreeVertices; i++) {
+        int iPos = freeVertices[i];
 
-            Vector3f vec = (weight / 2.0f) * (rotations[i] + rotations[j]) * (vertices[i] - vertices[j]);
+        for (int jPos : neighbours[iPos]) {
+            float weight = weights[iPos];
+
+            Vector3f vec = (weight / 2.0f) * (rotations[iPos] + rotations[jPos]) * (vertices[iPos] - vertices[jPos]);
             rhs.row(i) += vec;
 
-            if (vertexTypes[j] != Free) {
-                rhs.row(i) += weight * verticesUpdated[j];
+            if (vertexInformation[jPos].type != Free) {
+                rhs.row(i) += weight * verticesUpdated[jPos];
             }
         }
     }
@@ -157,10 +161,9 @@ void Solver::solveIteration() {
         exit(-1);
     }
 
-    for (int i = 0; i < numVertices; i++) {
-        if (vertexTypes[i] == Free) {
-            verticesUpdated[i] = solution.row(i);
-        }
+    for (int i = 0; i < numFreeVertices; i++) {
+        int iPos = freeVertices[i];
+        verticesUpdated[iPos] = solution.row(i);
     }
 }
 
