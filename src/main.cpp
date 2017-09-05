@@ -9,8 +9,8 @@
 using std::string;
 using std::vector;
 
-const int NUM_ITERATIONS = 30;
-const float CONVERGENCE_THRESHOLD = 0.0001f;
+const int NUM_ITERATIONS = 100;
+const float CONVERGENCE_THRESHOLD = 0.0f;
 
 // Parser declarations
 void readOFF(string filename, vector<Vector3f> &vertices, vector<Triangle> &faces);

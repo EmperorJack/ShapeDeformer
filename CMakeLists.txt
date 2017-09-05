@@ -13,4 +13,13 @@ file(GLOB_RECURSE SOURCE_FILES
 # Include the eigen header library
 include_directories(${PROJECT_SOURCE_DIR}/lib/Eigen)
 
+# Include the WunderSVD files
+include_directories(${PROJECT_SOURCE_DIR}/lib/WunderSVD)
+file(GLOB_RECURSE EXTERNAL_FILES
+    lib/*.hpp
+    lib/*.cpp
+    lib/*.h
+)
+
+
 add_executable(ShapeDeformer ${SOURCE_FILES} ${EXTERNAL_FILES})

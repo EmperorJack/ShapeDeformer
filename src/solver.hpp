@@ -14,8 +14,8 @@ using std::vector;
 using namespace Eigen;
 
 enum VertexType {
-    Free,
     Fixed,
+    Free,
     Handle
 };
 
@@ -38,6 +38,7 @@ public:
 
     void postProcess();
 
+    Vector3f computeCotangent(Triangle face);
     float computeEnergy();
 
     int numVertices;
@@ -46,17 +47,19 @@ public:
     int numFreeVertices;
     int numFixedVerties;
 
+    Affine3f handleDeformation;
+
     vector<Vector3f> vertices;
     vector<Vector3f> verticesUpdated;
     vector<Triangle> faces;
-    vector<set<int>> neighbours;
+    vector<vector<int>> neighbours;
 
     vector<VertexType> vertexTypes;
     vector<int> freeVertices;
     vector<int> fixedVertices;
 
-    vector<float> weights;
     vector<MatrixXf> rotations;
+    SparseMatrix<float> weights;
     SparseMatrix<float> laplaceBeltrami;
     SparseLU<SparseMatrix<float>> systemSolver;
 
