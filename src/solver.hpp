@@ -14,8 +14,8 @@ using std::vector;
 using namespace Eigen;
 
 enum VertexType {
-    Free,
     Fixed,
+    Free,
     Handle
 };
 
@@ -26,7 +26,7 @@ struct Triangle {
 class Solver {
 
 public:
-    Solver(vector<Vector3f> vertices, vector<Triangle> faces, Affine3f handleDeformation, vector<int> handleSelection);
+    Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<Triangle> faces, Affine3d handleDeformation, vector<int> handleSelection);
 
     void preProcess();
     void computeNeighbours();
@@ -36,9 +36,8 @@ public:
     void computeRotations();
     void solveIteration();
 
-    void postProcess();
-
-    float computeEnergy();
+    Vector3d computeCotangent(Triangle face);
+    double computeEnergy();
 
     int numVertices;
     int numFaces;
@@ -46,19 +45,21 @@ public:
     int numFreeVertices;
     int numFixedVerties;
 
-    vector<Vector3f> vertices;
-    vector<Vector3f> verticesUpdated;
+    Affine3d handleDeformation;
+
+    vector<Vector3d> vertices;
+    vector<Vector3d> verticesUpdated;
     vector<Triangle> faces;
-    vector<set<int>> neighbours;
+    vector<vector<int>> neighbours;
 
     vector<VertexType> vertexTypes;
     vector<int> freeVertices;
     vector<int> fixedVertices;
 
-    vector<float> weights;
-    vector<MatrixXf> rotations;
-    SparseMatrix<float> laplaceBeltrami;
-    SparseLU<SparseMatrix<float>> systemSolver;
+    vector<MatrixXd> rotations;
+    SparseMatrix<double> weights;
+    SparseMatrix<double> laplaceBeltrami;
+    SparseLU<SparseMatrix<double>> systemSolver;
 
 };
 

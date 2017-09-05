@@ -10,7 +10,7 @@
 
 using std::string;
 
-void readOFF(string filename, vector<Vector3f> &vertices, vector<Triangle> &faces) {
+void readOFF(string filename, vector<Vector3d> &vertices, vector<Triangle> &faces) {
     std::ifstream fileStream(filename);
     string line;
 
@@ -26,7 +26,7 @@ void readOFF(string filename, vector<Vector3f> &vertices, vector<Triangle> &face
 
     // Read each vertex
     for (int i = 0; i < vertexCount; i++) {
-        Eigen::Vector3f vertex;
+        Eigen::Vector3d vertex;
 
         std::getline(fileStream, line);
         std::istringstream vertexTokens(line);
@@ -48,8 +48,8 @@ void readOFF(string filename, vector<Vector3f> &vertices, vector<Triangle> &face
     }
 }
 
-Eigen::Affine3f readDef(string filename) {
-    Eigen::Affine3f deformation;
+Eigen::Affine3d readDef(string filename) {
+    Eigen::Affine3d deformation;
 
     std::ifstream fileStream(filename);
     string line;
@@ -64,7 +64,7 @@ Eigen::Affine3f readDef(string filename) {
 
         // For each column
         for (int j = 0; j < 4; j++) {
-            float value;
+            double value;
             lineTokens >> value;
             deformation(i, j) = value;
         }
@@ -92,7 +92,7 @@ std::vector<int> readSel(string filename, int vertexCount) {
     return selection;
 }
 
-void writeOFF(string filename, vector<Vector3f> vertices, vector<Triangle> faces) {
+void writeOFF(string filename, vector<Vector3d> vertices, vector<Triangle> faces) {
     std::ofstream fileStream(filename);
 
     // Write the first line
@@ -103,7 +103,7 @@ void writeOFF(string filename, vector<Vector3f> vertices, vector<Triangle> faces
 
     // Write each vertex
     for (int i = 0; i < vertices.size(); i++) {
-        Eigen::Vector3f vertex = vertices[i];
+        Eigen::Vector3d vertex = vertices[i];
         fileStream << vertex[0] << " " << vertex[1] << " " << vertex[2] << "\n";
     }
 
