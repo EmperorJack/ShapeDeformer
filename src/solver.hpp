@@ -27,6 +27,7 @@ public:
     void computeWeights();
     void computeLaplaceBeltrami(vector<int> handleSelection);
 
+    void computeRotations();
     void solveIteration();
 
     void postProcess();
@@ -47,7 +48,8 @@ public:
     vector<int> handleSelection;
 
     // Algorithm information
-    VectorXf weights;
+    vector<float> weights;
+    vector<MatrixXf> rotations;
     SparseMatrix<float> laplaceBeltrami;
     SparseLU<SparseMatrix<float>> systemSolver;
 

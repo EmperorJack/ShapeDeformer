@@ -11,16 +11,6 @@ Solver::Solver(vector<Vector3f> vertices, vector<triangle> faces, Affine3f handl
         vertices(vertices), faces(faces), handleDeformation(handleDeformation), handleSelection(handleSelection) {
     this->numVertices = (int) vertices.size();
     this->numFaces = (int) faces.size();
-
-    std::cout << "Initialise updated vertices" << std::endl;
-
-    for (int i = 0; i < numVertices; i++) {
-        if (handleSelection[i] == 2) {
-            verticesUpdated.push_back(handleDeformation * vertices[i]);
-        } else {
-            verticesUpdated.push_back(vertices[i]);
-        }
-    }
 }
 
 void Solver::preProcess() {
@@ -29,6 +19,21 @@ void Solver::preProcess() {
 
     std::cout << "Computing weights" << std::endl;
     computeWeights();
+
+    std::cout << "Initializing updated vertices" << std::endl;
+
+    for (int i = 0; i < numVertices; i++) {
+        if (handleSelection[i] == 2) {
+            verticesUpdated.push_back(handleDeformation * vertices[i]);
+        } else {
+            verticesUpdated.push_back(vertices[i]);
+        }
+    }
+
+    std::cout << "Initializing rotations" << std::endl;
+
+    rotations.resize((size_t) numVertices, Matrix3f::Zero());
+    computeRotations();
 
     std::cout << "Computing laplace beltrami matrix" << std::endl;
     computeLaplaceBeltrami(handleSelection);
@@ -63,11 +68,7 @@ void Solver::computeNeighbours() {
 }
 
 void Solver::computeWeights() {
-    weights.resize(numVertices);
-
-    for (int i = 0; i < numVertices; i++) {
-        weights.coeffRef(i) = 1.0f / ((float) neighbours[i].size());
-    }
+    weights.resize((size_t) numVertices, 1.0f);
 }
 
 void Solver::computeLaplaceBeltrami(std::vector<int> handleSelection) {
@@ -76,7 +77,7 @@ void Solver::computeLaplaceBeltrami(std::vector<int> handleSelection) {
 
     for (int i = 0; i < numVertices; i++) {
         for (int j : neighbours[i]) {
-            float weight = weights.coeff(i);
+            float weight = weights[i];
 
             laplaceBeltrami.coeffRef(i, i) += weight;
 
@@ -89,18 +90,40 @@ void Solver::computeLaplaceBeltrami(std::vector<int> handleSelection) {
     laplaceBeltrami.makeCompressed();
 }
 
+void Solver::computeRotations() {
+    vector<Matrix3f> edgeProduct((size_t) numVertices, Matrix3f::Zero());
+
+    for (int i = 0; i < numVertices; i++) {
+        for (int j : neighbours[i]) {
+            float weight = weights[i];
+
+            Vector3f edge = vertices[i] - vertices[j];
+            Vector3f edgeUpdated = verticesUpdated[i] - verticesUpdated[j];
+
+            edgeProduct[i] += weight * edge * edgeUpdated.transpose();
+        }
+    }
+
+    for (int i = 0; i < numVertices; i++) {
+        JacobiSVD<MatrixXf> svd(edgeProduct[i], ComputeThinU | ComputeThinV);
+        Matrix3f rotation = svd.matrixV() * svd.matrixU().transpose();
+        rotations[i] = rotation;
+    }
+}
+
 void Solver::solveIteration() {
+
+    // Compute rotations
+    computeRotations();
 
     // Compute the RHS
     MatrixXf rhs = MatrixXf::Zero(numVertices, 3);
 
     for (int i = 0; i < numVertices; i++) {
-        Matrix3f rotation = Matrix3f::Identity();
-
-        float weight = weights.coeff(i);
-
         for (int j : neighbours[i]) {
-            Vector3f vec = (weight / 2.0f) * (rotation) * (vertices[i] - vertices[j]);
+            float weight = weights[i];
+
+            Vector3f vec = (weight / 2.0f) * (rotations[i] + rotations[j]) * (vertices[i] - vertices[j]);
             rhs.row(i) += vec;
 
             if (handleSelection[j] != 1) {
@@ -133,11 +156,9 @@ float Solver::computeEnergy() {
 
     for (int i = 0; i < numVertices; i++) {
         for (int j : neighbours[i]) {
-            Matrix3f rotation = Matrix3f::Identity();
+            float weight = weights[i];
 
-            float weight = weights.coeff(i);
-
-            Vector3f vec = (verticesUpdated[i] - verticesUpdated[j]) - rotation * (vertices[i] - vertices[j]);
+            Vector3f vec = (verticesUpdated[i] - verticesUpdated[j]) - rotations[i] * (vertices[i] - vertices[j]);
 
             energy += weight * vec.squaredNorm();
         }
