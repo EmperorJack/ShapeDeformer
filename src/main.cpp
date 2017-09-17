@@ -22,8 +22,9 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "ARAP Shape Deformer\n");
 
     if (argc < 5) {
-        fprintf(stderr, "Filenames for an input model, handle deformation matrix, handle selection indices and output model should be provided! Initial guess input model is optional\n");
-        //fprintf(stderr, "e.g: ./ShapeDeformer \"../res/\"\n");
+        fprintf(stderr, "Filenames for an input model, handle deformation matrix, handle selection indices and output model should be provided!\nInitial guess input model is optional\n");
+        fprintf(stderr, "Usage: ./ShapeDeformer inputModelPath handleDeformationPath selectionPath outputModelPath (initialGuessModelPath)\n");
+        fprintf(stderr, "e.g: ./ShapeDeformer \"../res/model.off\" \"../res/model.def\" \"../res/model.sel\" \"model-deformed.off\" \"../res/model-start.off\"\n");
         return -1;
     }
 
