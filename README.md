@@ -24,11 +24,11 @@ http://igl.ethz.ch/projects/deformation-survey/
 
 ## Included Examples
 
-**Knubbel Plane**
+**Plane**
 
-`./ShapeDeformer "../res/knubbel.off" "../res/knubbel.def" "../res/knubbel.sel" "knubbel-deformed.off"`
+`./ShapeDeformer "../res/plane.off" "../res/plane.def" "../res/plane.sel" "plane-deformed.off"`
 
-`./ShapeDeformer "../res/knubbel.off" "../res/knubbel.def" "../res/knubbel.sel" "knubbel-deformed.off" "../res/knubbel-laplacian_editing.off"`
+`./ShapeDeformer "../res/plane.off" "../res/plane.def" "../res/plane.sel" "plane-deformed.off" "../res/plane-laplacian_editing.off"`
 
 **Cylinder**
 
