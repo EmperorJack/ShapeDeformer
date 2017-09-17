@@ -26,7 +26,7 @@ struct Triangle {
 class Solver {
 
 public:
-    Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<Triangle> faces, Affine3d handleDeformation, vector<int> handleSelection);
+    Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<Triangle> faces, Affine3d* handleDeformation, vector<int> handleSelection);
 
     void preProcess();
     void computeNeighbours();
@@ -36,7 +36,6 @@ public:
     void computeRotations();
     void solveIteration();
 
-    Vector3d computeCotangent(Triangle face);
     double computeEnergy();
 
     int numVertices;
@@ -45,7 +44,7 @@ public:
     int numFreeVertices;
     int numFixedVerties;
 
-    Affine3d handleDeformation;
+    Affine3d* handleDeformation;
 
     vector<Vector3d> vertices;
     vector<Vector3d> verticesUpdated;

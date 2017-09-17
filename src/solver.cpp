@@ -7,7 +7,7 @@
 
 using namespace Eigen;
 
-Solver::Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<Triangle> faces, Affine3d handleDeformation, vector<int> handleSelection) :
+Solver::Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<Triangle> faces, Affine3d* handleDeformation, vector<int> handleSelection) :
         vertices(vertices), faces(faces), handleDeformation(handleDeformation) {
     this->numVertices = (int) vertices.size();
     this->numFaces = (int) faces.size();
@@ -53,7 +53,7 @@ void Solver::preProcess() {
     std::cout << "Enforcing constraints on updated vertices" << std::endl;
     for (int i = 0; i < numVertices; i++) {
         if (vertexTypes[i] == Handle) {
-            verticesUpdated[i] = handleDeformation * vertices[i];
+            verticesUpdated[i] = *handleDeformation * vertices[i];
         }
     }
 
@@ -106,7 +106,6 @@ void Solver::computeWeights() {
             double weight = 1.0;
 
             weights.coeffRef(i, j) = weight;
-            // weights.coeffRef(j, i) = weight;
         }
     }
 }
@@ -126,7 +125,6 @@ void Solver::computeLaplaceBeltrami() {
 
                 if (vertexTypes[j] == Free) {
                     laplaceBeltrami.coeffRef(i, j) -= weight;
-                    // laplaceBeltrami.coeffRef(j, i) -= weight;
                 }
             }
         }

@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Setup the solver
-    Solver* solver = new Solver(vertices, initialGuess, faces, handleDeformation, handleSelection);
+    Solver* solver = new Solver(vertices, initialGuess, faces, &handleDeformation, handleSelection);
 
     // Perform the deformation algorithm
     solver->preProcess();
