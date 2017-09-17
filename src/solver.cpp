@@ -12,7 +12,7 @@ Solver::Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<
     this->numVertices = (int) vertices.size();
     this->numFaces = (int) faces.size();
 
-    std::cout << "Computing free vs fixed vertices" << std::endl;
+    // std::cout << "Computing free vs fixed vertices" << std::endl;
 
     for (int i = 0; i < numVertices; i++) {
         if (handleSelection[i] == 0) {
@@ -30,7 +30,7 @@ Solver::Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<
     numFreeVertices = (int) freeVertices.size();
     numFixedVerties = (int) fixedVertices.size();
 
-    std::cout << "Initializing updated vertices" << std::endl;
+    // std::cout << "Initializing updated vertices" << std::endl;
 
     if (initialGuess.empty()) {
         verticesUpdated = vertices;
@@ -40,32 +40,32 @@ Solver::Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<
 }
 
 void Solver::preProcess() {
-    std::cout << "Computing vertex neighbours" << std::endl;
+    // std::cout << "Computing vertex neighbours" << std::endl;
     computeNeighbours();
 
-    std::cout << "Computing weights" << std::endl;
+    // std::cout << "Computing weights" << std::endl;
     computeWeights();
 
-    std::cout << "Initializing rotations" << std::endl;
+    // std::cout << "Initializing rotations" << std::endl;
     rotations.resize((size_t) numVertices, Matrix3d::Identity());
     computeRotations();
 
-    std::cout << "Enforcing constraints on updated vertices" << std::endl;
+    // std::cout << "Enforcing constraints on updated vertices" << std::endl;
     for (int i = 0; i < numVertices; i++) {
         if (vertexTypes[i] == Handle) {
             verticesUpdated[i] = *handleDeformation * vertices[i];
         }
     }
 
-    std::cout << "Computing laplace beltrami matrix" << std::endl;
+    // std::cout << "Computing laplace beltrami matrix" << std::endl;
     computeLaplaceBeltrami();
 
-    std::cout << "Factorising system" << std::endl;
+    // std::cout << "Factorising system" << std::endl;
     systemSolver.analyzePattern(laplaceBeltrami);
     systemSolver.factorize(laplaceBeltrami);
 
     if(systemSolver.info() != Success) {
-        std::cout << "Factorisation failed" << std::endl;
+        // std::cout << "Factorisation failed" << std::endl;
         exit(-1);
     }
 }
@@ -201,7 +201,7 @@ void Solver::solveIteration() {
     MatrixXd solution = systemSolver.solve(rhs);
 
     if (systemSolver.info() != Success) {
-        std::cout << "Solving failed" << std::endl;
+        // std::cout << "Solving failed" << std::endl;
         exit(-1);
     }
 

@@ -3,23 +3,24 @@
 //
 
 #include <iostream>
-#include <solver.hpp>
+#include <chrono>
 #include <Eigen>
+#include <solver.hpp>
 
-using std::string;
-using std::vector;
+using namespace std;
+using namespace chrono;
 
-const int NUM_ITERATIONS = 100;
-const double CONVERGENCE_THRESHOLD = 0.0;
+const int MAX_ITERATIONS = 1500;
+const double ENERGY_CHANGE_THRESHOLD = 0.9999;
 
 // Parser declarations
 void readOFF(string filename, vector<Vector3d> &vertices, vector<Triangle> &faces);
 Eigen::Affine3d readDef(string filename);
-std::vector<int> readSel(string filename, int vertexCount);
+vector<int> readSel(string filename, int vertexCount);
 void writeOFF(string filename, vector<Vector3d> vertices, vector<Triangle> faces);
 
 int main(int argc, char *argv[]) {
-    fprintf(stdout, "ARAP Shape Deformer\n");
+    cout << "ARAP Shape Deformer" << endl;
 
     if (argc < 5) {
         fprintf(stderr, "Filenames for an input model, handle deformation matrix, handle selection indices and output model should be provided!\nInitial guess input model is optional\n");
@@ -51,23 +52,49 @@ int main(int argc, char *argv[]) {
         readOFF(initialGuessFilename, initialGuess, faces);
     }
 
+    // Begin algorithm pre-processing
+    cout << "\n~~~ Pre-processing ~~~" << endl;
+    auto startTime = high_resolution_clock::now();
+
     // Setup the solver
     Solver* solver = new Solver(vertices, initialGuess, faces, &handleDeformation, handleSelection);
-
-    // Perform the deformation algorithm
     solver->preProcess();
 
-    double energy = solver->computeEnergy();
-    std::cout << "Initial energy: " << energy << std::endl;
+    auto endTime = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(endTime - startTime);
+    cout << "Took " << duration.count() << " ms" << "\n~~~~~" << endl;
 
-    for (int iteration = 0; iteration < NUM_ITERATIONS && energy > CONVERGENCE_THRESHOLD; iteration++) {
+    // Compute the initial energy and the threshold
+    double energy = solver->computeEnergy();
+    double lastEnergy = energy * (1 / ENERGY_CHANGE_THRESHOLD) + 1;
+    cout << "\nInitial energy: " << energy << endl;
+
+    // Begin algorithm body
+    cout << "\n~~~ Begin Algorithm ~~~" << endl;
+    double averageIterationTime = 0;
+    int iterationsPerformed = 0;
+
+    for (int iteration = 0; iteration < MAX_ITERATIONS && (energy / lastEnergy) <= ENERGY_CHANGE_THRESHOLD; iteration++) {
+        startTime = high_resolution_clock::now();
+
         solver->solveIteration();
 
+        endTime = high_resolution_clock::now();
+        duration = duration_cast<milliseconds>(endTime - startTime);
+        averageIterationTime += duration.count();
+
+        lastEnergy = energy;
         energy = solver->computeEnergy();
-        std::cout << "Iteration " << iteration << " energy: " << energy << std::endl;
+        cout << "Iteration " << iteration + 1 << ", energy: " << energy << ", time taken: " << duration.count() << " ms" << endl;
+
+        iterationsPerformed++;
     }
 
-    std::cout << "Final energy: " << energy << std::endl;
+    double totalTimeTaken = averageIterationTime;
+
+    averageIterationTime /= (double) iterationsPerformed;
+
+    cout << "Total iterations: " << iterationsPerformed << ", final energy: " << energy << ", average iteration time: " << averageIterationTime << " ms" << ", total time taken: " << totalTimeTaken << " ms" << "\n~~~~~" << endl;
 
     // Write output file
     writeOFF(outputFilename, solver->verticesUpdated, faces);
