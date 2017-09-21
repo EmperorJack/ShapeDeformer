@@ -5,6 +5,8 @@
 #include <iostream>
 #include <solver.hpp>
 
+#define OMP_NUM_THREADS 8
+
 using namespace Eigen;
 
 Solver::Solver(vector<Vector3d> vertices, vector<Vector3d> initialGuess, vector<Triangle> faces, Affine3d* handleDeformation, vector<int> handleSelection) :
@@ -132,6 +134,8 @@ void Solver::computeLaplaceBeltrami() {
 }
 
 void Solver::computeRotations() {
+
+    #pragma omp parallel for
     for (int i = 0; i < numVertices; i++) {
         Matrix3d covariance = Matrix3d::Zero();
 
@@ -179,6 +183,7 @@ void Solver::solveIteration() {
     // Compute the RHS
     MatrixX3d rhs = MatrixXd::Zero(numVertices, 3);
 
+    #pragma omp parallel for
     for (int i = 0; i < numVertices; i++) {
 
         if (vertexTypes[i] != Free) {
@@ -213,16 +218,24 @@ void Solver::solveIteration() {
 }
 
 double Solver::computeEnergy() {
-    double energy = 0.0;
+    double energies[numVertices];
 
+    #pragma omp parallel for
     for (int i = 0; i < numVertices; i++) {
+        energies[i] = 0.0f;
+
         for (int j : neighbours[i]) {
             double weight = weights.coeff(i, j);
 
             Vector3d vec = (verticesUpdated[i] - verticesUpdated[j]) - rotations[i] * (vertices[i] - vertices[j]);
 
-            energy += weight * vec.squaredNorm();
+            energies[i] += weight * vec.squaredNorm();
         }
+    }
+
+    double energy = 0.0;
+    for (int i = 0; i < numVertices; i++) {
+        energy += energies[i];
     }
 
     return energy;
