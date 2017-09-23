@@ -103,11 +103,52 @@ void Solver::computeWeights() {
     weights.resize(numVertices, numVertices);
     weights.reserve(VectorXi::Constant(numVertices, 7));
 
-    for (int i = 0; i < numVertices; i++) {
-        for (int j : neighbours[i]) {
-            double weight = 1.0;
+    bool uniformWeights = true;
 
-            weights.coeffRef(i, j) = weight;
+    if (uniformWeights) {
+        for (int i = 0; i < numVertices; i++) {
+            for (int j : neighbours[i]) {
+                double weight = 1.0;
+
+                weights.coeffRef(i, j) = weight;
+            }
+        }
+    } else {
+        Vector3d a, b, c;
+        Vector3d v1, v2;
+        double cot;
+
+        for (int i = 0; i < numFaces; i++) {
+            Triangle face = faces[i];
+            a = vertices[face.v[0]];
+            b = vertices[face.v[1]];
+            c = vertices[face.v[2]];
+
+            double area = (b - a).cross(c - a).norm() * 0.5;
+
+            v1 = a - c;
+            v2 = b - c;
+            cot = v1.dot(v2) / v1.cross(v2).norm();
+            cot = fabs(cot) * 0.5 * (1.0 / area);
+            //std::cout << cot << ", ";
+            weights.coeffRef(face.v[0], face.v[1]) += cot;
+            weights.coeffRef(face.v[1], face.v[0]) += cot;
+
+            v1 = a - b;
+            v2 = c - b;
+            cot = v1.dot(v2) / v1.cross(v2).norm();
+            cot = fabs(cot) * 0.5 * (1.0 / area);
+            //std::cout << cot << ", ";
+            weights.coeffRef(face.v[0], face.v[2]) += cot;
+            weights.coeffRef(face.v[2], face.v[0]) += cot;
+
+            v1 = b - a;
+            v2 = c - a;
+            cot = v1.dot(v2) / v1.cross(v2).norm();
+            cot = fabs(cot) * 0.5 * (1.0 / area);
+            //std::cout << cot << std::endl;
+            weights.coeffRef(face.v[1], face.v[2]) += cot;
+            weights.coeffRef(face.v[2], face.v[1]) += cot;
         }
     }
 }
