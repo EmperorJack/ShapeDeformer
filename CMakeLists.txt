@@ -3,8 +3,11 @@ project(ShapeDeformer)
 
 set(CMAKE_CXX_STANDARD 11)
 
-# Add openmp
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fopenmp")
+# Setup LLVM paths (needed for openmp on OSX)
+if (APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/usr/local/opt/llvm/lib -I/usr/local/opt/llvm/include")
+endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
 # Include source files
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -17,3 +20,11 @@ file(GLOB_RECURSE SOURCE_FILES
 include_directories(${PROJECT_SOURCE_DIR}/lib/Eigen)
 
 add_executable(ShapeDeformer ${SOURCE_FILES} ${EXTERNAL_FILES})
+
+if (APPLE)
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD COMMAND
+            ${CMAKE_INSTALL_NAME_TOOL} -add_rpath /usr/local/opt/llvm/lib
+            $<TARGET_FILE:${PROJECT_NAME}>
+    )
+endif()
