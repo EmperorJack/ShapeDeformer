@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include <Eigen>
+#include <omp.h>
 #include <solver.hpp>
 
 using namespace std;
@@ -51,6 +52,9 @@ int main(int argc, char *argv[]) {
     if (argc == 6) {
         readOFF(initialGuessFilename, initialGuess, faces);
     }
+
+    // Set omp threads
+    omp_set_num_threads(8);
 
     // Begin algorithm pre-processing
     cout << "\n~~~ Pre-processing ~~~" << endl;

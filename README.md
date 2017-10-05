@@ -50,6 +50,12 @@ http://igl.ethz.ch/projects/deformation-survey/
 
 **Simple**
 
-`./ShapeDeformer "../res/simple.off" "../res/simple.def" "../res/simple.sel" "../res/simple-deformed.off"`
+`./ShapeDeformer "../res/simple.off" "../res/simple.def" "../res/simple.sel" "simple-deformed.off"`
 
+**Grid**
 
+`./ShapeDeformer "../res/grid.off" "../res/grid.def" "../res/grid.sel" "grid-deformed.off"`
+
+**Uniform**
+
+`./ShapeDeformer "../res/uniform.off" "../res/uniform.def" "../res/uniform.sel" "uniform-deformed.off"`
